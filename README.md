@@ -1,8 +1,20 @@
 # Bundesliga Match Predictor ⚽
 
-Ein Machine-Learning-Projekt zur Vorhersage von Bundesliga-Spielausgängen auf Basis historischer Spieldaten, aktueller Teamform und Elo-Ratings.
+Ein Machine-Learning-Projekt zur Vorhersage von Bundesliga-Spielausgängen auf Basis historischer Spieldaten, Teamform und Elo-Ratings.
 
-Das Projekt untersucht, wie gut sich die Ergebnisse von Bundesliga-Spielen mit Machine-Learning-Modellen vorhersagen lassen. Besonderer Fokus liegt auf einer **zeitlich korrekten Evaluation**, bei der für jede Vorhersage ausschließlich Informationen verwendet werden, die vor dem jeweiligen Spiel verfügbar waren.
+Das Projekt untersucht, wie gut sich die Ergebnisse von Bundesliga-Spielen mit verschiedenen Machine-Learning-Modellen vorhersagen lassen. Besonderer Fokus liegt auf einer **zeitlich korrekten Evaluation**, bei der für jede Vorhersage ausschließlich Informationen verwendet werden, die vor dem jeweiligen Spiel verfügbar waren.
+
+## 🚀 Interaktive Anwendung
+
+Das Projekt enthält zusätzlich eine interaktive **Streamlit-GUI**, mit der Bundesliga-Spiele ausgewählt und die vom trainierten Modell berechneten Wahrscheinlichkeiten für Heimsieg, Unentschieden und Auswärtssieg angezeigt werden können.
+
+Die Anwendung verwendet das trainierte **Logistic-Regression-Modell mit Elo-Rating und den entwickelten Form-Features**.
+
+Die Anwendung kann lokal mit folgendem Befehl gestartet werden:
+
+```bash
+python -m streamlit run app.py
+```
 
 ## Ziel des Projekts
 
@@ -14,7 +26,7 @@ Das Modell unterscheidet zwischen drei möglichen Ergebnissen:
 * `D` – Unentschieden
 * `A` – Auswärtssieg
 
-Zusätzlich soll untersucht werden, wie gut sich die Modelle auf zukünftige, bisher ungesehene Spielzeiten übertragen lassen.
+Zusätzlich wird untersucht, wie gut sich die Modelle auf zukünftige, bisher ungesehene Spielzeiten übertragen lassen.
 
 ## Datensatz
 
@@ -51,14 +63,14 @@ Für jedes Team werden Statistiken aus den letzten fünf Spielen berechnet:
 
 Zusätzlich werden die bisherigen Leistungen unter Berücksichtigung des Spielorts betrachtet:
 
-* letzte Heimspiele des Heimteams
-* letzte Auswärtsspiele des Auswärtsteams
+* bisherige Heimspiele des Heimteams
+* bisherige Auswärtsspiele des Auswärtsteams
 
 ### Elo-Rating
 
 Für jedes Team wird ein chronologisches Elo-Rating berechnet.
 
-Alle Teams starten mit einem Rating von `1500`. Nach jedem Spiel wird das Rating entsprechend dem tatsächlichen Ergebnis aktualisiert.
+Alle Teams starten mit einem Rating von `1500`. Nach jedem Spiel wird das Rating entsprechend dem erwarteten und tatsächlichen Ergebnis aktualisiert.
 
 Für die Vorhersage wird unter anderem die Differenz der Ratings verwendet:
 
@@ -76,6 +88,12 @@ Zusätzlich werden direkte Unterschiede zwischen Heim- und Auswärtsteam berechn
 * Tordifferenz
 * Differenz der kassierten Tore
 * Differenz bei der Anzahl der Siege
+
+### Vermeidung von Data Leakage
+
+Beim Erzeugen der Features wird das aktuelle Spiel zunächst anhand der bisherigen Informationen beschrieben. Erst **nachdem die Features erstellt wurden**, wird das Ergebnis des aktuellen Spiels zur Historie des jeweiligen Teams hinzugefügt.
+
+Dadurch können Informationen aus dem Ergebnis des aktuellen Spiels nicht in dessen eigene Features gelangen.
 
 ## Verwendete Machine-Learning-Modelle
 
@@ -95,13 +113,13 @@ Eine Strategie, die immer `H` vorhersagt, erreicht damit eine Genauigkeit von et
 
 ### Logistic Regression
 
-Als principales lineares Modell wird Logistic Regression eingesetzt.
+Als wichtiges lineares Modell wird Logistic Regression eingesetzt.
 
 Da die Features unterschiedliche Größenordnungen besitzen, werden sie vor dem Training standardisiert.
 
 ### XGBoost
 
-Zusätzlich wird XGBoost als nichtlineares Modell getestet.
+Zusätzlich wird XGBoost als nichtlineares Vergleichsmodell getestet.
 
 Die Hyperparameter werden mithilfe einer zeitbasierten Validierung optimiert.
 
@@ -126,7 +144,7 @@ Dadurch wird die Situation realistischer abgebildet, in der ein Modell ausschlie
 
 ## Ergebnisse
 
-Die Walk-Forward-Evaluation liefert folgende durchschnittliche Ergebnisse:
+Die Walk-Forward-Evaluation liefert folgende durchschnittlichen Ergebnisse:
 
 | Modell                        | Durchschnittliche Accuracy | Durchschnittlicher Log Loss |
 | ----------------------------- | -------------------------: | --------------------------: |
@@ -154,6 +172,10 @@ bundesliga-match-predictor/
 │   ├── raw/
 │   └── processed/
 │
+├── models/
+│   ├── logistic_regression_elo.pkl
+│   └── feature_columns.pkl
+│
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
 │   ├── 02_feature_engineering.ipynb
@@ -161,8 +183,10 @@ bundesliga-match-predictor/
 │   └── 04_walk_forward_evaluation.ipynb
 │
 ├── src/
-│   └── download_data.py
+│   ├── download_data.py
+│   └── feature_engineering.py
 │
+├── app.py
 ├── README.md
 ├── requirements.txt
 └── .gitignore
@@ -176,6 +200,7 @@ bundesliga-match-predictor/
 * scikit-learn
 * XGBoost
 * Matplotlib
+* Streamlit
 * Jupyter Notebook
 * Git / GitHub
 
@@ -217,6 +242,12 @@ Die Notebooks werden anschließend in dieser Reihenfolge ausgeführt:
 04_walk_forward_evaluation.ipynb
 ```
 
+Die interaktive Anwendung kann anschließend mit Streamlit gestartet werden:
+
+```powershell
+python -m streamlit run app.py
+```
+
 ## Einschränkungen
 
 Die aktuelle Version verwendet bewusst eine relativ kleine und interpretierbare Auswahl an Features.
@@ -230,6 +261,7 @@ Mögliche Einschränkungen sind:
 * keine detaillierten taktischen Informationen
 * einfaches Elo-Modell
 * Unentschieden sind besonders schwierig vorherzusagen
+* die Streamlit-Anwendung basiert auf der vorhandenen historischen Datenbasis bis 2025/26
 
 Das Projekt ist daher als **Portfolio- und Lernprojekt** gedacht und nicht als produktionsreifes Prognosesystem.
 
@@ -245,7 +277,6 @@ Das Projekt könnte später beispielsweise erweitert werden um:
 * weitere Machine-Learning-Modelle
 * Vergleich mit Buchmacherwahrscheinlichkeiten
 * Backtesting
-* interaktives Dashboard
 * weitere Ligen und Wettbewerbe
 
 ## Fazit
@@ -264,6 +295,8 @@ Teamform + Heim-/Auswärtsform + Elo
 Machine Learning
        ↓
 Walk-Forward Evaluation
+       ↓
+Interaktive Streamlit-Anwendung
 ```
 
 Die bisherigen Ergebnisse zeigen, dass ein relativ einfaches Logistic-Regression-Modell mit fußballspezifischen Features eine naive Heimsieg-Baseline auf zuvor ungesehenen zukünftigen Spielzeiten übertreffen kann.
